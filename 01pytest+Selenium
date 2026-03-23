@@ -1,0 +1,42 @@
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
+def test_baidu_search():
+    # 1. 初始化浏览器
+    driver = webdriver.Chrome()
+    # 【关键修复1】最大化窗口，防止元素被遮挡
+    driver.maximize_window()
+    try:
+        # 2. 打开百度
+        driver.get("https://www.baidu.com")
+        # 【关键修复2】显式等待，确保搜索框已经在页面上加载出来
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "kw"))
+        )
+        # 3. 输入“测试开发”
+        # 【关键修复3】使用 JS 强制输入，绕过遮挡问题
+        # 原生的 search_box.send_keys() 遇到遮挡会报错，JS 方式最稳妥
+        driver.execute_script("document.getElementById('kw').value = '测试开发';")
+        # 4. 点击“百度一下”按钮
+        # 同样使用 JS 点击，防止点击被拦截
+        driver.execute_script("document.getElementById('su').click();")
+        # 5. 等待 3 秒让我们看清楚结果
+        time.sleep(3)
+        # 6. 截图保存
+        driver.save_screenshot("baidu_result.png")
+        print("测试执行完毕，截图已保存！")
+    except Exception as e:
+        print(f"执行出错: {e}")
+        # 出错时也截图，方便排查
+        driver.save_screenshot("error_error.png")
+    finally:
+        # 7. 关闭浏览器
+        driver.quit()
+
+
+if __name__ == "__main__":
+    test_baidu_search()
